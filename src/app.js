@@ -1,58 +1,63 @@
-/**
- * Welcome to Pebble.js!
- *
- * This is where you write your app.
- */
-
 var UI = require('ui');
-var Vector2 = require('vector2');
 
-var main = new UI.Card({
-  title: 'Pebble.js',
-  icon: 'images/menu_icon.png',
-  subtitle: 'Hello World!',
-  body: 'Press any button.'
+// Create a Card with title and subtitle
+var card = new UI.Card({
+  title:'Rain Check',
+  body:'Fetching data...'
 });
 
-main.show();
+// Display the Card
+card.show();
 
-main.on('click', 'up', function(e) {
-  var menu = new UI.Menu({
-    sections: [{
-      items: [{
-        title: 'Pebble.js',
-        icon: 'images/menu_icon.png',
-        subtitle: 'Can do Menus'
-      }, {
-        title: 'Second Item',
-        subtitle: 'Subtitle Text'
-      }]
-    }]
-  });
-  menu.on('select', function(e) {
-    console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
-    console.log('The item is titled "' + e.item.title + '"');
-  });
-  menu.show();
-});
+// make request to dark sky
+var ajax = require('ajax');
 
-main.on('click', 'select', function(e) {
-  var wind = new UI.Window();
-  var textfield = new UI.Text({
-    position: new Vector2(0, 50),
-    size: new Vector2(144, 30),
-    font: 'gothic-24-bold',
-    text: 'Text Anywhere!',
-    textAlign: 'center'
-  });
-  wind.add(textfield);
-  wind.show();
-});
+// Construct URL
+var api_key = '46bdaa3f66331d12897ed8474accd381';
+var latlong = '48.1333,11.5667';
+var URL = 'https://api.forecast.io/forecast/' + api_key + '/' + latlong;
 
-main.on('click', 'down', function(e) {
-  var card = new UI.Card();
-  card.title('A Card');
-  card.subtitle('Is a Window');
-  card.body('The simplest window type in Pebble.js.');
-  card.show();
-});
+// Make the request
+ajax(
+  {
+    url: URL,
+    type: 'json'
+  },
+  function(data) {
+    // Success!
+    console.log('Successfully fetched weather data!');
+    var weather_text = parseData(data);
+    card.body(weather_text);
+  },
+  function(error) {
+    // Failure!
+    console.log('Failed fetching weather data: ' + error);
+  }
+);
+
+function parseData(data) {
+  var items = data.hourly.data;
+  for (var i=0; i<items.length; i++) {
+    var item = items[i];
+    if (item.precipType !== undefined) {
+      var prob = parseFloat(item.precipProbability);
+      if (prob > 0.4) {
+        var date = new Date(parseInt(item.time)*1000);
+        var hours = date.getHours();
+        if (hours > 12) {
+          hours = (hours - 12) + 'PM';
+        } else {
+          hours = hours + 'AM';
+        }
+        if (i===0) {
+          return 'High chance of ' + item.summary + ' right now';
+        } else {
+          return 'High chance of ' + item.summary + ' at ' + hours;
+        }
+      }
+    }
+  }
+  return 'No rain today.';
+  card.body(data.currently.summary);
+
+}
