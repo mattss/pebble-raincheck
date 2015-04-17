@@ -7,11 +7,12 @@ var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
 
 // Custom configuration page
 Settings.config(
-  { url: 'http://192.168.87.17:8000/raincheck.html' },
+  { url: 'http://mattss.github.io/pebble-raincheck/config.html' },
   function(e) {
     console.log('Closed configurable - got options:' + JSON.stringify(e.options));
     if (e.options.location) {
       lookup_location(e.options.location);
+      Settings.option('location_name', e.options.location);
     }
   }
 );
@@ -44,9 +45,9 @@ function lookup_location(locname) {
       console.log('Location match: ' + result.formatted_address);
       var geo = result.geometry.location;
       console.log('Result: ' + JSON.stringify(geo));
-      Settings.data.location = {'lat': geo.lat, 
-                                'lng': geo.lng, 
-                                'name':result.formatted_address};
+      Settings.data('location', {'lat': geo.lat, 
+                                 'lng': geo.lng, 
+                                 'name':result.formatted_address});
       update();
     },
     function(error) {
@@ -106,12 +107,14 @@ function parse_weather_data(data) {
 
 // Main update function
 function update() {
-  if (Settings.data.location) {
-    console.log('Fetching data for location: ' + JSON.stringify(Settings.data.location));
-    card.body('Fetching weather for ' + Settings.data.location.name);
-    update_weather_data(Settings.data.location.lat, 
-                        Settings.data.location.lng);
+  var location = Settings.data('location');
+  if (location) {
+    console.log('Fetching data for location: ' + JSON.stringify(location));
+    card.body('Fetching weather for ' + location.name);
+    update_weather_data(location.lat, 
+                        location.lng);
   } else {
+    console.log('No location set - looking up current location');
     // Use current location
     var locationOptions = {
       enableHighAccuracy: true, 
@@ -138,4 +141,5 @@ card.on('accelTap', function(e) {
 });
 
 // Initial load
+console.log('Initial update')
 update();
