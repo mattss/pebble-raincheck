@@ -4,7 +4,17 @@ var Accel = require('ui/accel');
 var Settings = require('settings');
 
 var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
-//var location_name = 'Bristol';
+
+// Custom configuration page
+Settings.config(
+  { url: 'http://192.168.87.17:8000/raincheck.html' },
+  function(e) {
+    console.log('Closed configurable - got options:' + JSON.stringify(e.options));
+    if (e.options.location) {
+      lookup_location(e.options.location);
+    }
+  }
+);
 
 // Set up the main Card for display
 var card = new UI.Card({
@@ -13,11 +23,10 @@ var card = new UI.Card({
 });
 card.show();
 
-Accel.init();
-
-function get_location(locname, callback) {
+// Get location details from a location name and store in settings
+function lookup_location(locname) {
   console.log('Getting location data for: ' + locname);
-  var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + locname;
+  var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURI(locname);
   ajax(
     {
       url: url,
@@ -33,10 +42,12 @@ function get_location(locname, callback) {
       }
       var result = data.results[0];
       console.log('Location match: ' + result.formatted_address);
-      card.body('Fetching data for ' + result.formatted_address);
       var geo = result.geometry.location;
-      console.log('lat/lng:' + geo);
-      callback({'lat': geo.lat, 'lng': geo.lng});
+      console.log('Result: ' + JSON.stringify(geo));
+      Settings.data.location = {'lat': geo.lat, 
+                                'lng': geo.lng, 
+                                'name':result.formatted_address};
+      update();
     },
     function(error) {
       // Failure!
@@ -45,9 +56,10 @@ function get_location(locname, callback) {
   );
 }
 
+// Grab latest update
 function update_weather_data(lat, lng) {
   var ds_URL = 'https://api.forecast.io/forecast/' + dark_sky_api_key + '/' + lat + ',' + lng;
-  console.log('Looking up weather data from' + ds_URL);
+  console.log('Looking up weather data from: ' + ds_URL);
   ajax(
     {
       url: ds_URL,
@@ -66,6 +78,7 @@ function update_weather_data(lat, lng) {
   );
 }
 
+// Parse response from darks sky API
 function parse_weather_data(data) {
   var items = data.hourly.data;
   for (var i=0; i<items.length; i++) {
@@ -91,29 +104,38 @@ function parse_weather_data(data) {
   return 'No rain today.';
 }
 
-if (Settings.option.location) {
-  var location = Settings.option.location;
-  update_weather_data(location.lat, location.lng);
-} else {
-  // Use current location
-  var locationOptions = {
-    enableHighAccuracy: true, 
-    maximumAge: 10000, 
-    timeout: 10000
-  };  
-  navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+// Main update function
+function update() {
+  if (Settings.data.location) {
+    console.log('Fetching data for location: ' + JSON.stringify(Settings.data.location));
+    card.body('Fetching weather for ' + Settings.data.location.name);
+    update_weather_data(Settings.data.location.lat, 
+                        Settings.data.location.lng);
+  } else {
+    // Use current location
+    var locationOptions = {
+      enableHighAccuracy: true, 
+      maximumAge: 10000, 
+      timeout: 10000
+    };  
+    navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+  }
 }
 
+// Current location lookup handlers
 function locationSuccess(pos) {
   update_weather_data(pos.coords.latitude, pos.coords.longitude);
 }
-
 function locationError(err) {
   console.log('location error (' + err.code + '): ' + err.message);
 }
-  
 
-//card.on('accelTap', function(e) {
-//  console.log('TAP!');
-//  get_location(location_name);
-//});
+// Shake to reload
+Accel.init();
+card.on('accelTap', function(e) {
+  console.log('TAP!');
+  update();
+});
+
+// Initial load
+update();
