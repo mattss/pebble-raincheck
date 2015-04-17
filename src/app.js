@@ -1,9 +1,10 @@
 var UI = require('ui');
 var ajax = require('ajax');
 var Accel = require('ui/accel');
+var Settings = require('settings');
 
 var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
-var location_name = 'Bristol';
+//var location_name = 'Bristol';
 
 // Set up the main Card for display
 var card = new UI.Card({
@@ -14,7 +15,7 @@ card.show();
 
 Accel.init();
 
-function get_location(locname) {
+function get_location(locname, callback) {
   console.log('Getting location data for: ' + locname);
   var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + locname;
   ajax(
@@ -35,7 +36,7 @@ function get_location(locname) {
       card.body('Fetching data for ' + result.formatted_address);
       var geo = result.geometry.location;
       console.log('lat/lng:' + geo);
-      update_weather_data(geo.lat, geo.lng);
+      callback({'lat': geo.lat, 'lng': geo.lng});
     },
     function(error) {
       // Failure!
@@ -90,9 +91,29 @@ function parse_weather_data(data) {
   return 'No rain today.';
 }
 
-get_location(location_name);
+if (Settings.option.location) {
+  var location = Settings.option.location;
+  update_weather_data(location.lat, location.lng);
+} else {
+  // Use current location
+  var locationOptions = {
+    enableHighAccuracy: true, 
+    maximumAge: 10000, 
+    timeout: 10000
+  };  
+  navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+}
 
-card.on('accelTap', function(e) {
-  console.log('TAP!');
-  get_location(location_name);
-});
+function locationSuccess(pos) {
+  update_weather_data(pos.coords.latitude, pos.coords.longitude);
+}
+
+function locationError(err) {
+  console.log('location error (' + err.code + '): ' + err.message);
+}
+  
+
+//card.on('accelTap', function(e) {
+//  console.log('TAP!');
+//  get_location(location_name);
+//});
