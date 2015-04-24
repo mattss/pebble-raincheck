@@ -100,7 +100,7 @@ function update_ui(weather_status) {
   var text = '';
   if (low === undefined && high === undefined) {
     maincard.body('');
-    maincard.banner('images/happy-sun-dithered.png');
+    maincard.banner('images/happy-sun-2-dithered.png');
   } else {
     maincard.banner('images/cloud-icon-dithered.png');
   }
