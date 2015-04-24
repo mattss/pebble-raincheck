@@ -93,6 +93,7 @@ function update_weather_data(lat, lng) {
   );
 }
 
+// Update the app UI
 function update_ui(weather_status) {
   var low = weather_status.low;
   var high = weather_status.high;
@@ -108,11 +109,14 @@ function update_ui(weather_status) {
     // a) there is no high
     // b) the high is later in the day
     if (high === undefined || high.date > low.date) {
-      text += create_text('Low', low.summary, low.date);
+      text += create_text('Low', low.summary, low.date, weather_status.now);
     }
   }  
   if (high !== undefined) {
-    text += create_text('High', high.summary, high.date);
+    if (low !== undefined) {
+      text += '\n';
+    }
+    text += create_text('High', high.summary, high.date, weather_status.now);
   }
   maincard.body(text);
   var location_name = Settings.option('location_name');
@@ -120,10 +124,39 @@ function update_ui(weather_status) {
   summarycard.body(location_name);
 }
 
-function create_text(likelihood, summary, date) {
+// Convert weather status to a readable string
+function create_text(likelihood, summary, date, now) {
+  var current_hour = now.getHours();
   var hour = date.getHours();
-  var nice_hour = hour>12 ? (hour - 12) + 'PM' : hour + 'AM';
-  return likelihood + ' chance of ' + summary + ' at ' + nice_hour;
+  console.log(now, current_hour);
+  console.log(date, hour);
+  var when;
+  if (hour == current_hour) {
+    when = 'right now';
+  } else {
+    when = 'at ' + nice_hour(hour); 
+  }
+  return likelihood + ' chance of ' + summary + ' ' + when;
+}
+
+// Format the hour nicely
+function nice_hour(hour) {
+  if (hour === 0) {
+    return '12AM';
+  } else if (hour == 12) {
+    return '12PM';
+  } else {
+    return hour>12 ? (hour - 12) + 'PM' : hour + 'AM';
+  }  
+}
+
+// Convert a date to local time using offset
+function offset_date(date, offset_hours) {
+  console.log('Generating offset date from: ' + date + '; offset: ' + offset_hours);
+  var utc_milliseconds = date.getTime();
+  console.log(utc_milliseconds);
+  var new_date = new Date(utc_milliseconds + (3600000 * offset_hours));
+  return new_date;
 }
 
 // Parse response from dark sky API
@@ -139,8 +172,7 @@ function parse_weather_data(data) {
       var prob = parseFloat(item.precipProbability);
       var amount = parseFloat(item.precipIntensity);
       if (prob > 0.1 && amount > 0.005) {
-        var utc_milliseconds = parseInt(item.time) * 1000;
-        var date = new Date(utc_milliseconds + (3600000 * offset));
+        var date = offset_date(new Date(parseInt(item.time) * 1000), offset);
         var result = {
             'date': date,
             'summary': item.summary
@@ -155,7 +187,8 @@ function parse_weather_data(data) {
       }
     }
   }
-  return {'low': low, 'high': high, 'summary':data.hourly.summary};
+  var now = offset_date(new Date(parseInt(data.currently.time) * 1000), offset);
+  return {'low': low, 'high': high, 'summary':data.hourly.summary, 'now':now};
 }
 
 // Main update function
@@ -192,8 +225,6 @@ function locationSuccess(pos) {
 function locationError(err) {
   console.log('location error (' + err.code + '): ' + err.message);
 }
-
-
 
 // Initial load
 console.log('Initial update');
