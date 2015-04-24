@@ -6,7 +6,7 @@ var Settings = require('settings');
 var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
 var config_url = 'http://mattss.github.io/pebble-raincheck/config.html';
 // Local development config
-var config_url = 'http://localhost:8000/config.html';
+// var config_url = 'http://localhost:8000/config.html';
 
 // Custom configuration page
 Settings.config(
@@ -22,7 +22,6 @@ Settings.config(
 
 // Set up the main Card for display
 var card = new UI.Card({
-  title:'Rain Check',
   body:'Fetching data...'
 });
 card.show();
@@ -72,8 +71,9 @@ function update_weather_data(lat, lng) {
     function(data) {
       // Success!
       console.log('Successfully fetched weather data!');
-      var weather_text = parse_weather_data(data);
-      set_state(weather_text);
+      var weather_status = parse_weather_data(data);
+      console.log('Status:' + JSON.stringify(weather_status));
+      update_ui(weather_status);
     },
     function(error) {
       // Failure!
@@ -82,35 +82,55 @@ function update_weather_data(lat, lng) {
   );
 }
 
-function set_state(weather_text) {
-  card.body(weather_text);
+function update_ui(weather_status) {
+  var low = weather_status.low;
+  var high = weather_status.high;
+  var text = '';
+  if (low !== undefined) {
+    text += create_text('Low', low.summary, low.date);
+  }
+  if (high !== undefined) {
+    text += create_text('High', high.summary, high.date);
+  }
+  if (low === undefined && high === undefined) {
+    text += 'No rain today.';
+  }
+  card.body(text);
 }
 
-// Parse response from darks sky API
+function create_text(likelihood, summary, date) {
+  var hour = date.getHours();
+  var nice_hour = hour>12 ? (hour - 12) + 'PM' : hour + 'AM';
+  return likelihood + ' chance of ' + summary + ' at ' + nice_hour;
+}
+
+// Parse response from dark sky API
 function parse_weather_data(data) {
   console.log('Timezone:' + data.timezone);
   var items = data.hourly.data;
-  for (var i=0; i<items.length; i++) {
+  var high;
+  var low;
+  for (var i=0; i<24; i++) { // limit to next 24 hours
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
-      if (prob > 0.4) {
+      if (prob > 0.1) {
         var date = new Date(parseInt(item.time)*1000);
-        var hours = date.getHours();
-        if (hours > 12) {
-          hours = (hours - 12) + 'PM';
-        } else {
-          hours = hours + 'AM';
-        }
-        if (i===0) {
-          return 'High chance of ' + item.summary + ' right now';
-        } else {
-          return 'High chance of ' + item.summary + ' at ' + hours;
+        var result = {
+            'date': date,
+            'summary': item.summary
+        };
+        if (prob > 0.4 && high === undefined) {
+          console.log('Found high: ' + result);
+          high = result;
+        } else if (low === undefined) {
+          console.log('Found low: ' + result);
+          low = result;
         }
       }
     }
   }
-  return 'No rain today.';
+  return {'low': low, 'high': high};
 }
 
 // Main update function
