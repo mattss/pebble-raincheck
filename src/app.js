@@ -17,16 +17,24 @@ Settings.config(
     }
     if (e.options.location) {
       lookup_location(e.options.location);
-      Settings.option('location_name', e.options.location);
     }
   }
 );
 
-// Set up the main Card for display
-var card = new UI.Card({
-  body:'Fetching data...'
+// Set up the various cards for display
+var maincard = new UI.Card({
+  body:'Rain Check'
 });
-card.show();
+var summarycard = new UI.Card({title:'Summary'});
+var locationcard = new UI.Card({title:'Location'});
+maincard.on('click', function(e) {
+  console.log('Button clicked: ' + e.button);
+  if (e.button == 'up') {
+    summarycard.show();
+  } else if (e.button == 'down') {
+    locationcard.show();
+  }
+});
 
 // Get location details from a location name and store in settings
 function lookup_location(locname) {
@@ -42,7 +50,7 @@ function lookup_location(locname) {
       console.log('Successfully fetched location data!');
       if (data.results.length === 0) {
         console.log('No results for location:' + locname);
-        card.body('Unknown location:' + locname);
+        maincard.body('Unknown location:' + locname);
         return;
       }
       var result = data.results[0];
@@ -52,6 +60,7 @@ function lookup_location(locname) {
       Settings.data('location', {'lat': geo.lat, 
                                  'lng': geo.lng, 
                                  'name':result.formatted_address});
+      Settings.option('location_name', result.formatted_address);
       update();
     },
     function(error) {
@@ -102,7 +111,9 @@ function update_ui(weather_status) {
   if (high !== undefined) {
     text += create_text('High', high.summary, high.date);
   }
-  card.body(text);
+  maincard.body(text);
+  summarycard.body(weather_status.summary);
+  locationcard.body(Settings.option('location_name'));
 }
 
 function create_text(likelihood, summary, date) {
@@ -139,7 +150,7 @@ function parse_weather_data(data) {
       }
     }
   }
-  return {'low': low, 'high': high};
+  return {'low': low, 'high': high, 'summary':data.hourly.summary};
 }
 
 // Main update function
@@ -147,13 +158,13 @@ function update() {
   var api_key = Settings.data('api_key');
   if (!api_key) {
     console.log('No api key set');
-    card.body('No api key set.');
+    maincard.body('No api key set.');
     return;
   }
   var location = Settings.data('location');
   if (location) {
     console.log('Fetching data for location: ' + JSON.stringify(location));
-    card.body('Fetching weather for ' + location.name);
+    maincard.body('Fetching weather for ' + location.name);
     update_weather_data(location.lat, 
                         location.lng);
   } else {
@@ -171,6 +182,7 @@ function update() {
 // Current location lookup handlers
 function locationSuccess(pos) {
   update_weather_data(pos.coords.latitude, pos.coords.longitude);
+  Settings.option('location_name', '(Using current location)');
 }
 function locationError(err) {
   console.log('location error (' + err.code + '): ' + err.message);
@@ -178,11 +190,12 @@ function locationError(err) {
 
 // Shake to reload
 Accel.init();
-card.on('accelTap', function(e) {
+maincard.on('accelTap', function(e) {
   console.log('TAP!');
   update();
 });
 
 // Initial load
-console.log('Initial update')
+console.log('Initial update');
+maincard.show();
 update();
