@@ -4,10 +4,13 @@ var Accel = require('ui/accel');
 var Settings = require('settings');
 
 var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
+var config_url = 'http://mattss.github.io/pebble-raincheck/config.html';
+// Local development config
+var config_url = 'http://localhost:8000/config.html';
 
 // Custom configuration page
 Settings.config(
-  { url: 'http://mattss.github.io/pebble-raincheck/config.html' },
+  { url: config_url },
   function(e) {
     console.log('Closed configurable - got options:' + JSON.stringify(e.options));
     if (e.options.location) {
@@ -87,7 +90,7 @@ function set_state(weather_text) {
 function parse_weather_data(data) {
   console.log('Timezone:' + data.timezone);
   var items = data.hourly.data;
-  for (var i=0; i<24; i++) {
+  for (var i=0; i<items.length; i++) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
