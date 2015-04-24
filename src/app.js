@@ -108,7 +108,8 @@ function create_text(likelihood, summary, date) {
 
 // Parse response from dark sky API
 function parse_weather_data(data) {
-  console.log('Timezone:' + data.timezone);
+  console.log('Timezone: ' + data.timezone + '; Offset: ' + data.offset);
+  var offset = parseInt(data.offset);
   var items = data.hourly.data;
   var high;
   var low;
@@ -117,7 +118,8 @@ function parse_weather_data(data) {
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
       if (prob > 0.1) {
-        var date = new Date(parseInt(item.time)*1000);
+        var utc_milliseconds = parseInt(item.time) * 1000;
+        var date = new Date(utc_milliseconds + (3600000 * offset));
         var result = {
             'date': date,
             'summary': item.summary
