@@ -88,14 +88,19 @@ function update_ui(weather_status) {
   var low = weather_status.low;
   var high = weather_status.high;
   var text = '';
-  if (low !== undefined) {
-    text += create_text('Low', low.summary, low.date);
-  }
-  if (high !== undefined) {
-    text += create_text('High', high.summary, high.date);
-  }
   if (low === undefined && high === undefined) {
     text += 'No rain today.';
+  }
+  if (low !== undefined) {
+    // We only care about the low probability weather if:
+    // a) there is no high
+    // b) the high is later in the day
+    if (high === undefined || high.date > low.date) {
+      text += create_text('Low', low.summary, low.date);
+    }
+  }  
+  if (high !== undefined) {
+    text += create_text('High', high.summary, high.date);
   }
   card.body(text);
 }
