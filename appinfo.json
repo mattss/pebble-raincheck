@@ -11,7 +11,6 @@
         "media": [
             {
                 "file": "images/menu_icon.png",
-                "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
                 "type": "png"
             },
@@ -29,6 +28,22 @@
                 "file": "fonts/UbuntuMono-Regular.ttf",
                 "name": "MONO_FONT_14",
                 "type": "font"
+            },
+            {
+                "file": "images/umbrella-dithered.png",
+                "name": "IMAGES_UMBRELLA_DITHERED_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/happy-sun-dithered.png",
+                "name": "IMAGES_HAPPY_SUN_DITHERED_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/raincheck-icon-dithered.png",
+                "menuIcon": true,
+                "name": "IMAGES_RAINCHECK_ICON_DITHERED_PNG",
+                "type": "png"
             }
         ]
     },

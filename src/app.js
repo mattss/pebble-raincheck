@@ -72,6 +72,7 @@ function lookup_location(locname) {
 
 // Grab latest update
 function update_weather_data(lat, lng) {
+  maincard.banner('');
   var ds_URL = 'https://api.forecast.io/forecast/' + Settings.data('api_key') + '/' + lat + ',' + lng;
   console.log('Looking up weather data from: ' + ds_URL);
   ajax(
@@ -99,6 +100,9 @@ function update_ui(weather_status) {
   var text = '';
   if (low === undefined && high === undefined) {
     text += 'No rain today.';
+    maincard.banner('images/happy-sun-dithered.png');
+  } else {
+    maincard.banner('images/umbrella-dithered.png');
   }
   if (low !== undefined) {
     // We only care about the low probability weather if:
@@ -133,7 +137,8 @@ function parse_weather_data(data) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
-      if (prob > 0.1) {
+      var amount = parseFloat(item.precipIntensity);
+      if (prob > 0.1 && amount > 0.005) {
         var utc_milliseconds = parseInt(item.time) * 1000;
         var date = new Date(utc_milliseconds + (3600000 * offset));
         var result = {
