@@ -70,7 +70,7 @@ function update_weather_data(lat, lng) {
       // Success!
       console.log('Successfully fetched weather data!');
       var weather_text = parse_weather_data(data);
-      card.body(weather_text);
+      set_state(weather_text);
     },
     function(error) {
       // Failure!
@@ -79,10 +79,15 @@ function update_weather_data(lat, lng) {
   );
 }
 
+function set_state(weather_text) {
+  card.body(weather_text);
+}
+
 // Parse response from darks sky API
 function parse_weather_data(data) {
+  console.log('Timezone:' + data.timezone);
   var items = data.hourly.data;
-  for (var i=0; i<items.length; i++) {
+  for (var i=0; i<24; i++) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
