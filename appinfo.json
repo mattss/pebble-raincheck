@@ -30,13 +30,13 @@
                 "type": "font"
             },
             {
-                "file": "images/umbrella-dithered.png",
-                "name": "IMAGES_UMBRELLA_DITHERED_PNG",
+                "file": "images/happy-sun-dithered.png",
+                "name": "IMAGES_HAPPY_SUN_DITHERED_PNG",
                 "type": "png"
             },
             {
-                "file": "images/happy-sun-dithered.png",
-                "name": "IMAGES_HAPPY_SUN_DITHERED_PNG",
+                "file": "images/cloud-icon-dithered.png",
+                "name": "IMAGES_CLOUD_ICON_DITHERED_PNG",
                 "type": "png"
             },
             {

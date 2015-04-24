@@ -25,15 +25,14 @@ Settings.config(
 var maincard = new UI.Card({
   body:'Rain Check'
 });
-var summarycard = new UI.Card({title:'Summary'});
-var locationcard = new UI.Card({title:'Location'});
-maincard.on('click', function(e) {
-  console.log('Button clicked: ' + e.button);
-  if (e.button == 'up') {
-    summarycard.show();
-  } else if (e.button == 'down') {
-    locationcard.show();
-  }
+var summarycard = new UI.Card();
+// Shake to reveal summary
+Accel.init();
+maincard.on('accelTap', function(e) {
+  summarycard.show();
+  setTimeout(function() {
+    summarycard.hide();
+  }, 4000);
 });
 
 // Get location details from a location name and store in settings
@@ -99,10 +98,10 @@ function update_ui(weather_status) {
   var high = weather_status.high;
   var text = '';
   if (low === undefined && high === undefined) {
-    text += 'No rain today.';
+    maincard.body('');
     maincard.banner('images/happy-sun-dithered.png');
   } else {
-    maincard.banner('images/umbrella-dithered.png');
+    maincard.banner('images/cloud-icon-dithered.png');
   }
   if (low !== undefined) {
     // We only care about the low probability weather if:
@@ -116,8 +115,9 @@ function update_ui(weather_status) {
     text += create_text('High', high.summary, high.date);
   }
   maincard.body(text);
-  summarycard.body(weather_status.summary);
-  locationcard.body(Settings.option('location_name'));
+  var location_name = Settings.option('location_name');
+  summarycard.subtitle(weather_status.summary);
+  summarycard.body(location_name);
 }
 
 function create_text(likelihood, summary, date) {
@@ -193,12 +193,7 @@ function locationError(err) {
   console.log('location error (' + err.code + '): ' + err.message);
 }
 
-// Shake to reload
-Accel.init();
-maincard.on('accelTap', function(e) {
-  console.log('TAP!');
-  update();
-});
+
 
 // Initial load
 console.log('Initial update');
