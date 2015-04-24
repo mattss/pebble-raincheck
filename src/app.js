@@ -3,7 +3,6 @@ var ajax = require('ajax');
 var Accel = require('ui/accel');
 var Settings = require('settings');
 
-var dark_sky_api_key = '46bdaa3f66331d12897ed8474accd381';
 var config_url = 'http://mattss.github.io/pebble-raincheck/config.html';
 // Local development config
 // var config_url = 'http://localhost:8000/config.html';
@@ -13,6 +12,9 @@ Settings.config(
   { url: config_url },
   function(e) {
     console.log('Closed configurable - got options:' + JSON.stringify(e.options));
+    if (e.options.ds_api_key) {
+      Settings.data('api_key', e.options.ds_api_key);
+    }
     if (e.options.location) {
       lookup_location(e.options.location);
       Settings.option('location_name', e.options.location);
@@ -61,7 +63,7 @@ function lookup_location(locname) {
 
 // Grab latest update
 function update_weather_data(lat, lng) {
-  var ds_URL = 'https://api.forecast.io/forecast/' + dark_sky_api_key + '/' + lat + ',' + lng;
+  var ds_URL = 'https://api.forecast.io/forecast/' + Settings.data('api_key') + '/' + lat + ',' + lng;
   console.log('Looking up weather data from: ' + ds_URL);
   ajax(
     {
@@ -135,6 +137,12 @@ function parse_weather_data(data) {
 
 // Main update function
 function update() {
+  var api_key = Settings.data('api_key');
+  if (!api_key) {
+    console.log('No api key set');
+    card.body('No api key set.');
+    return;
+  }
   var location = Settings.data('location');
   if (location) {
     console.log('Fetching data for location: ' + JSON.stringify(location));
