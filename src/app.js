@@ -3,6 +3,9 @@ var ajax = require('ajax');
 var Accel = require('ui/accel');
 var Settings = require('settings');
 
+// How many hours ahead should we show alerts for?
+var FORECAST_HOURS = 18;
+
 var config_url = 'http://mattss.github.io/pebble-raincheck/config.html';
 // Local development config
 // var config_url = 'http://localhost:8000/config.html';
@@ -176,7 +179,7 @@ function parse_weather_data(data) {
   var items = data.hourly.data;
   var high;
   var low;
-  for (var i=0; i<24; i++) { // limit to next 24 hours
+  for (var i=0; i<FORECAST_HOURS; i++) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
