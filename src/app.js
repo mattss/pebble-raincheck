@@ -25,14 +25,21 @@ Settings.config(
 var maincard = new UI.Card({
   body:'Rain Check'
 });
-var summarycard = new UI.Card();
-// Shake to reveal summary
+var summarycard = new UI.Card({'title': 'Summary'});
+// Shake to temporarily reveal summary
 Accel.init();
 maincard.on('accelTap', function(e) {
   summarycard.show();
   setTimeout(function() {
     summarycard.hide();
   }, 4000);
+});
+// Central button shows summary permanently
+maincard.on('click', function(e) {
+  console.log('Button clicked: ' + e.button);
+  if (e.button == 'select') {
+    summarycard.show();
+  }
 });
 
 // Get location details from a location name and store in settings
@@ -120,8 +127,7 @@ function update_ui(weather_status) {
   }
   maincard.body(text);
   var location_name = Settings.option('location_name');
-  summarycard.subtitle(weather_status.summary);
-  summarycard.body(location_name);
+  summarycard.body(weather_status.summary + '\n(' + location_name + ')');
 }
 
 // Convert weather status to a readable string
@@ -132,11 +138,15 @@ function create_text(likelihood, summary, date, now) {
   console.log(date, hour);
   var when;
   if (hour == current_hour) {
-    when = 'right now';
+    when = 'Now';
   } else {
-    when = 'at ' + nice_hour(hour); 
+    when = nice_hour(hour); 
   }
-  return likelihood + ' chance of ' + summary + ' ' + when;
+  var text = when + ': ' + summary;
+  if (likelihood == 'Low') {
+    text += ' (L)';
+  }
+  return text;
 }
 
 // Format the hour nicely
@@ -146,7 +156,7 @@ function nice_hour(hour) {
   } else if (hour == 12) {
     return '12PM';
   } else {
-    return hour>12 ? (hour - 12) + 'PM' : hour + 'AM';
+    return hour>12 ? (hour - 12) + 'pm' : hour + 'am';
   }  
 }
 
