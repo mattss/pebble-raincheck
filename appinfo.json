@@ -30,8 +30,9 @@
                 "type": "font"
             },
             {
-                "file": "images/happy-sun-2-dithered.png",
-                "name": "IMAGES_HAPPY_SUN_2_DITHERED_PNG",
+                "file": "images/raincheck-icon-dithered.png",
+                "menuIcon": true,
+                "name": "IMAGES_RAINCHECK_ICON_DITHERED_PNG",
                 "type": "png"
             },
             {
@@ -40,9 +41,8 @@
                 "type": "png"
             },
             {
-                "file": "images/raincheck-icon-dithered.png",
-                "menuIcon": true,
-                "name": "IMAGES_RAINCHECK_ICON_DITHERED_PNG",
+                "file": "images/happy-sun-2-dithered.png",
+                "name": "IMAGES_HAPPY_SUN_2_DITHERED_PNG",
                 "type": "png"
             }
         ]

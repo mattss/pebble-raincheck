@@ -137,8 +137,6 @@ function update_ui(weather_status) {
 function create_text(percentage, summary, date, now) {
   var current_hour = now.getHours();
   var hour = date.getHours();
-  console.log(now, current_hour);
-  console.log(date, hour);
   var when;
   if (hour == current_hour) {
     when = 'Now';
