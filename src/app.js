@@ -119,14 +119,14 @@ function update_ui(weather_status) {
     // a) there is no high
     // b) the high is later in the day
     if (high === undefined || high.date > low.date) {
-      text += create_text('Low', low.summary, low.date, weather_status.now);
+      text += create_text(low.percentage, low.summary, low.date, weather_status.now);
     }
   }  
   if (high !== undefined) {
     if (low !== undefined) {
       text += '\n';
     }
-    text += create_text('High', high.summary, high.date, weather_status.now);
+    text += create_text(high.percentage, high.summary, high.date, weather_status.now);
   }
   maincard.body(text);
   var location_name = Settings.option('location_name');
@@ -134,7 +134,7 @@ function update_ui(weather_status) {
 }
 
 // Convert weather status to a readable string
-function create_text(likelihood, summary, date, now) {
+function create_text(percentage, summary, date, now) {
   var current_hour = now.getHours();
   var hour = date.getHours();
   console.log(now, current_hour);
@@ -146,9 +146,7 @@ function create_text(likelihood, summary, date, now) {
     when = nice_hour(hour); 
   }
   var text = when + ': ' + summary;
-  if (likelihood == 'Low') {
-    text += ' (L)';
-  }
+  text += ' (' + percentage + '%)';
   return text;
 }
 
@@ -183,12 +181,14 @@ function parse_weather_data(data) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
+      var percentage = parseInt(prob * 100);
       var amount = parseFloat(item.precipIntensity);
       if (prob > 0.1 && amount > 0.005) {
         var date = offset_date(new Date(parseInt(item.time) * 1000), offset);
         var result = {
             'date': date,
-            'summary': item.summary
+            'summary': item.summary,
+          'percentage': percentage
         };
         if (prob > 0.4 && high === undefined) {
           console.log('Found high: ' + result);
