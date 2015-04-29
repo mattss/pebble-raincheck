@@ -181,7 +181,7 @@ function parse_weather_data(data) {
     var item = items[i];
     if (item.precipType !== undefined) {
       var prob = parseFloat(item.precipProbability);
-      var percentage = prob * 100;
+      var percentage = parseInt(prob * 100);
       var amount = parseFloat(item.precipIntensity);
       if (prob > 0.1 && amount > 0.005) {
         var date = offset_date(new Date(parseInt(item.time) * 1000), offset);
